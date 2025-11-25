@@ -1,21 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { questsAPI, playerAPI } from '../services/api';
 import './QuestJournal.css';
 
 function QuestJournal() {
-  const { token } = useAuth();
+  const { token, refreshPlayer } = useAuth();
   const [availableQuests, setAvailableQuests] = useState([]);
   const [activeQuests, setActiveQuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingQuestId, setAcceptingQuestId] = useState(null);
+  const [completingQuestId, setCompletingQuestId] = useState(null);
 
-  useEffect(() => {
-    fetchQuests();
-  }, []);
-
-  const fetchQuests = async () => {
+  const fetchQuests = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -47,7 +44,11 @@ function QuestJournal() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchQuests();
+  }, [fetchQuests]);
 
   const handleAcceptQuest = async (questId) => {
     try {
@@ -66,14 +67,24 @@ function QuestJournal() {
     }
   };
 
-  const getQuestDifficultyColor = (difficulty) => {
-    const colors = {
-      easy: '#4caf50',
-      medium: '#ff9800',
-      hard: '#f44336',
-      epic: '#9c27b0'
-    };
-    return colors[difficulty] || '#666';
+  const handleCompleteQuest = async (questId) => {
+    try {
+      setCompletingQuestId(questId);
+      setError(null);
+
+      await playerAPI.completeQuest(token, questId);
+      
+      // Rafraîchir l'état global du joueur (niveau, XP, inventaire)
+      await refreshPlayer();
+      
+      // Rafraîchir la liste des quêtes après complétion
+      await fetchQuests();
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la complétion de la quête');
+      console.error('Error completing quest:', err);
+    } finally {
+      setCompletingQuestId(null);
+    }
   };
 
   if (loading) {
@@ -121,7 +132,13 @@ function QuestJournal() {
                       <span className="reward-value">{quest.itemRewards.length} objet(s)</span>
                     )}
                   </div>
-                  <span className="quest-status in-progress">En cours</span>
+                  <button
+                    className="complete-button"
+                    onClick={() => handleCompleteQuest(quest._id)}
+                    disabled={completingQuestId === quest._id}
+                  >
+                    {completingQuestId === quest._id ? 'Complétion...' : 'Terminer'}
+                  </button>
                 </div>
               </div>
             ))}

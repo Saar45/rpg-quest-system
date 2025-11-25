@@ -4,7 +4,7 @@ import { playerAPI, itemsAPI } from '../services/api';
 import './Inventory.css';
 
 function Inventory() {
-  const { token } = useAuth();
+  const { token, user, refreshPlayer } = useAuth();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,9 +15,8 @@ function Inventory() {
       setLoading(true);
       setError(null);
 
-      // Récupérer le profil du joueur pour obtenir l'inventaire
-      const profileResponse = await playerAPI.getProfile(token);
-      const inventoryIds = profileResponse.data?.inventory || [];
+      // Utiliser les données du contexte utilisateur
+      const inventoryIds = user?.inventory || [];
 
       // Si l'inventaire est vide
       if (inventoryIds.length === 0) {
@@ -52,7 +51,7 @@ function Inventory() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, user]);
 
   useEffect(() => {
     fetchInventory();
@@ -65,6 +64,9 @@ function Inventory() {
 
       await playerAPI.useItem(token, itemId);
 
+      // Rafraîchir l'état global du joueur (inventaire)
+      await refreshPlayer();
+      
       // Rafraîchir l'inventaire après utilisation
       await fetchInventory();
     } catch (err) {

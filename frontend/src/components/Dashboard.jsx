@@ -1,8 +1,16 @@
+import { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import QuestJournal from './QuestJournal';
+import Inventory from './Inventory';
 import './Dashboard.css';
 
 function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshPlayer } = useAuth();
+
+  // Rafraîchir les données du joueur au chargement du Dashboard
+  useEffect(() => {
+    refreshPlayer();
+  }, [refreshPlayer]);
 
   const handleLogout = () => {
     logout();
@@ -37,10 +45,8 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="info-message">
-          <h3>🎮 Votre aventure commence ici !</h3>
-          <p>Les fonctionnalités de quêtes et d'inventaire seront bientôt disponibles.</p>
-        </div>
+        <QuestJournal />
+        <Inventory />
       </div>
     </div>
   );

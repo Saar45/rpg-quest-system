@@ -183,6 +183,34 @@
   opacity: 0.6;
 }
 
+.complete-button {
+  padding: 8px 20px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.complete-button:hover:not(:disabled) {
+  background-color: #1976d2;
+  transform: scale(1.05);
+}
+
+.complete-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.complete-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .quest-grid {
