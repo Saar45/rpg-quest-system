@@ -67,7 +67,7 @@ Access at `http://localhost:5173`
 
 **Player:** name, email, password, level, experience, inventory[], quests[]  
 **Quest:** title, description, level, status, rewards{experience, item}  
-**Item:** name, description, type, rarity, effects, value
+**Item:** name, description, type, effects, value
 
 ## Project Structure
 
