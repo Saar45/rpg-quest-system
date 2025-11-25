@@ -83,7 +83,7 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // le password sera automatiquement haché par le pre-save hook??
+    // le password sera automatiquement haché par le pre-save hook?? // yessir
     const player = new Player({
       name,
       email,
