@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS middleware
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', '*'); // not a good practice for prod, I know
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
@@ -38,6 +38,10 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((error) => {
     console.error('MongoDB connection error:', error);
   });
+
+
+// To do later : put the routes in different files except the static ones
+
 
 // Basic route
 app.get('/', (req, res) => {
@@ -63,7 +67,6 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Vérifier si l'email existe déjà
     const existingPlayer = await Player.findOne({ email });
     if (existingPlayer) {
       return res.status(400).json({
@@ -80,7 +83,7 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Créer le nouveau player (le password sera automatiquement haché par le pre-save hook)
+    // le password sera automatiquement haché par le pre-save hook??
     const player = new Player({
       name,
       email,
@@ -316,7 +319,6 @@ app.post('/api/player/accept-quest/:questId', authMiddleware, async (req, res) =
   try {
     const { questId } = req.params;
 
-    // Vérifier si la quête existe
     const quest = await Quest.findById(questId);
     if (!quest) {
       return res.status(404).json({
@@ -325,7 +327,6 @@ app.post('/api/player/accept-quest/:questId', authMiddleware, async (req, res) =
       });
     }
 
-    // Récupérer le joueur
     const player = await Player.findById(req.player.id);
     if (!player) {
       return res.status(404).json({
@@ -347,7 +348,6 @@ app.post('/api/player/accept-quest/:questId', authMiddleware, async (req, res) =
       });
     }
 
-    // Ajouter la quête avec le statut "in_progress"
     player.quests.push({
       questId: questId,
       status: 'in_progress'
@@ -379,7 +379,6 @@ app.post('/api/player/use-item/:itemId', authMiddleware, async (req, res) => {
   try {
     const { itemId } = req.params;
 
-    // Récupérer le joueur
     const player = await Player.findById(req.player.id);
     if (!player) {
       return res.status(404).json({
@@ -388,7 +387,6 @@ app.post('/api/player/use-item/:itemId', authMiddleware, async (req, res) => {
       });
     }
 
-    // Vérifier si l'item existe dans l'inventaire
     const itemIndex = player.inventory.findIndex(
       item => item.toString() === itemId
     );
@@ -419,6 +417,101 @@ app.post('/api/player/use-item/:itemId', authMiddleware, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error using item',
+      error: error.message
+    });
+  }
+});
+
+// Complete a quest
+app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res) => {
+  try {
+    const { questId } = req.params;
+
+
+    //holdup do u even exist
+    const player = await Player.findById(req.player.id);
+    if (!player) {
+      return res.status(404).json({
+        success: false,
+        message: 'Player not found'
+      });
+    }
+
+    // does it even exist 
+    const quest = await Quest.findById(questId);
+    if (!quest) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quest not found'
+      });
+    }
+
+    // Find our quest baby bro 
+    const playerQuestIndex = player.quests.findIndex(
+      q => q.questId.toString() === questId
+    );
+
+    if (playerQuestIndex === -1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Quest not accepted by player'
+      });
+    }
+
+    const playerQuest = player.quests[playerQuestIndex];
+
+    if (playerQuest.status !== 'in_progress') {
+      return res.status(400).json({
+        success: false,
+        message: `Quest is already ${playerQuest.status}`,
+        currentStatus: playerQuest.status
+      });
+    }
+
+
+    player.quests[playerQuestIndex].status = 'completed';
+
+    const experienceReward = quest.rewards?.experience || 0;
+    player.experience += experienceReward;
+
+    // 100 xp par level here
+    const newLevel = Math.floor(player.experience / 100) + 1;
+    const leveledUp = newLevel > player.level; // boolean here might use it later 
+    player.level = newLevel;
+
+    const itemRewards = [];
+    if (quest.rewards?.item) {
+      player.inventory.push(quest.rewards.item);
+      itemRewards.push(quest.rewards.item);
+    }
+
+    await player.save();
+
+    // Repopuler les données pour la réponse
+    await player.populate('inventory');
+    await player.populate('quests.questId');
+
+    res.json({
+      success: true,
+      message: 'Quest completed successfully',
+      data: {
+        quest: player.quests[playerQuestIndex],
+        rewards: {
+          experience: experienceReward,
+          items: itemRewards
+        },
+        player: {
+          level: player.level,
+          experience: player.experience,
+          leveledUp: leveledUp,
+          inventory: player.inventory
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error completing quest',
       error: error.message
     });
   }

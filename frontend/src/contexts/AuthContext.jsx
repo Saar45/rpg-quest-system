@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
+import { playerAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -22,6 +23,35 @@ export const AuthProvider = ({ children }) => {
   });
   
   const [loading, setLoading] = useState(false);
+
+  // Fonction pour rafraîchir les données du joueur depuis l'API
+  const refreshPlayer = useCallback(async () => {
+    if (!token) return;
+    
+    try {
+      setLoading(true);
+      const response = await playerAPI.getProfile(token);
+      const playerData = response.data;
+      
+      // Mettre à jour les données du joueur
+      const updatedUser = {
+        id: playerData.id,
+        name: playerData.name,
+        email: playerData.email,
+        level: playerData.level,
+        experience: playerData.experience,
+        inventory: playerData.inventory,
+        quests: playerData.quests
+      };
+      
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Error refreshing player data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
   const login = (userData, authToken) => {
     setUser(userData);
@@ -52,6 +82,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    refreshPlayer,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
