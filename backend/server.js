@@ -67,7 +67,6 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Vérifier si l'email existe déjà
     const existingPlayer = await Player.findOne({ email });
     if (existingPlayer) {
       return res.status(400).json({
@@ -84,7 +83,7 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Créer le nouveau player (le password sera automatiquement haché par le pre-save hook)
+    // le password sera automatiquement haché par le pre-save hook??
     const player = new Player({
       name,
       email,
@@ -320,7 +319,6 @@ app.post('/api/player/accept-quest/:questId', authMiddleware, async (req, res) =
   try {
     const { questId } = req.params;
 
-    // Vérifier si la quête existe
     const quest = await Quest.findById(questId);
     if (!quest) {
       return res.status(404).json({
@@ -329,7 +327,6 @@ app.post('/api/player/accept-quest/:questId', authMiddleware, async (req, res) =
       });
     }
 
-    // Récupérer le joueur
     const player = await Player.findById(req.player.id);
     if (!player) {
       return res.status(404).json({
@@ -351,7 +348,6 @@ app.post('/api/player/accept-quest/:questId', authMiddleware, async (req, res) =
       });
     }
 
-    // Ajouter la quête avec le statut "in_progress"
     player.quests.push({
       questId: questId,
       status: 'in_progress'
@@ -383,7 +379,6 @@ app.post('/api/player/use-item/:itemId', authMiddleware, async (req, res) => {
   try {
     const { itemId } = req.params;
 
-    // Récupérer le joueur
     const player = await Player.findById(req.player.id);
     if (!player) {
       return res.status(404).json({
@@ -392,7 +387,6 @@ app.post('/api/player/use-item/:itemId', authMiddleware, async (req, res) => {
       });
     }
 
-    // Vérifier si l'item existe dans l'inventaire
     const itemIndex = player.inventory.findIndex(
       item => item.toString() === itemId
     );
@@ -433,7 +427,8 @@ app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res)
   try {
     const { questId } = req.params;
 
-    // Récupérer le joueur
+
+    //holdup do u even exist
     const player = await Player.findById(req.player.id);
     if (!player) {
       return res.status(404).json({
@@ -442,7 +437,7 @@ app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res)
       });
     }
 
-    // Vérifier si la quête existe
+    // does it even exist 
     const quest = await Quest.findById(questId);
     if (!quest) {
       return res.status(404).json({
@@ -451,7 +446,7 @@ app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res)
       });
     }
 
-    // Trouver la quête dans la liste des quêtes du joueur
+    // Find our quest baby bro 
     const playerQuestIndex = player.quests.findIndex(
       q => q.questId.toString() === questId
     );
@@ -465,7 +460,6 @@ app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res)
 
     const playerQuest = player.quests[playerQuestIndex];
 
-    // Vérifier que la quête est bien en cours
     if (playerQuest.status !== 'in_progress') {
       return res.status(400).json({
         success: false,
@@ -474,20 +468,21 @@ app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res)
       });
     }
 
-    // Mettre à jour le statut de la quête
+
     player.quests[playerQuestIndex].status = 'completed';
 
-    // Ajouter l'expérience
-    player.experience += quest.experienceReward;
+    const experienceReward = quest.rewards?.experience || 0;
+    player.experience += experienceReward;
 
-    // Calculer le niveau en fonction de l'expérience (100 XP par niveau)
+    // 100 xp par level here
     const newLevel = Math.floor(player.experience / 100) + 1;
-    const leveledUp = newLevel > player.level;
+    const leveledUp = newLevel > player.level; // boolean here might use it later 
     player.level = newLevel;
 
-    // Ajouter les récompenses d'objets à l'inventaire
-    if (quest.itemRewards && quest.itemRewards.length > 0) {
-      player.inventory.push(...quest.itemRewards);
+    const itemRewards = [];
+    if (quest.rewards?.item) {
+      player.inventory.push(quest.rewards.item);
+      itemRewards.push(quest.rewards.item);
     }
 
     await player.save();
@@ -502,8 +497,8 @@ app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res)
       data: {
         quest: player.quests[playerQuestIndex],
         rewards: {
-          experience: quest.experienceReward,
-          items: quest.itemRewards || []
+          experience: experienceReward,
+          items: itemRewards
         },
         player: {
           level: player.level,

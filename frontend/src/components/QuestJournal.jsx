@@ -28,13 +28,19 @@ function QuestJournal() {
       // Séparer les quêtes disponibles et les quêtes en cours
       const activeQuestIds = playerQuests.map(q => q.questId?._id || q.questId);
       
-      const active = playerQuests.filter(q => q.status === 'in_progress').map(q => ({
-        ...q.questId,
-        status: q.status,
-        playerQuestId: q._id
-      }));
+      const active = playerQuests.filter(q => q.status === 'in_progress').map(q => {
+        console.log('🔍 Processing active quest:', q);
+        return {
+          ...q.questId,
+          status: q.status,
+          playerQuestId: q._id
+        };
+      });
 
       const available = allQuests.filter(q => !activeQuestIds.includes(q._id));
+
+      console.log('Active quests:', active);
+      console.log('Available quests:', available);
 
       setActiveQuests(active);
       setAvailableQuests(available);
@@ -72,7 +78,8 @@ function QuestJournal() {
       setCompletingQuestId(questId);
       setError(null);
 
-      await playerAPI.completeQuest(token, questId);
+      const response = await playerAPI.completeQuest(token, questId);
+      console.log('🎉 Quest completion response:', response);
       
       // Rafraîchir l'état global du joueur (niveau, XP, inventaire)
       await refreshPlayer();
@@ -81,7 +88,6 @@ function QuestJournal() {
       await fetchQuests();
     } catch (err) {
       setError(err.message || 'Erreur lors de la complétion de la quête');
-      console.error('Error completing quest:', err);
     } finally {
       setCompletingQuestId(null);
     }
@@ -112,36 +118,41 @@ function QuestJournal() {
           <p className="empty-message">Aucune quête en cours. Acceptez une nouvelle quête ci-dessous!</p>
         ) : (
           <div className="quest-grid">
-            {activeQuests.map((quest) => (
-              <div key={quest._id} className="quest-card active-quest">
-                <div className="quest-header">
-                  <h4 className="quest-title">{quest.title}</h4>
-                  {/* <span 
-                    className="quest-difficulty"
-                    style={{ backgroundColor: getQuestDifficultyColor(quest.difficulty) }}
-                  >
-                    {quest.difficulty}
-                  </span> */}
-                </div>
-                <p className="quest-description">{quest.description}</p>
-                <div className="quest-footer">
-                  <div className="quest-rewards">
-                    <span className="reward-label">Récompenses:</span>
-                    <span className="reward-value">{quest.experienceReward} XP</span>
-                    {quest.itemRewards?.length > 0 && (
-                      <span className="reward-value">{quest.itemRewards.length} objet(s)</span>
-                    )}
+            {activeQuests.map((quest) => {
+              console.log('🎮 Rendering active quest:', quest);
+              return (
+                <div key={quest._id} className="quest-card active-quest">
+                  <div className="quest-header">
+                    <h4 className="quest-title">{quest.title || 'Quest sans titre'}</h4>
+                    {/* <span 
+                      className="quest-difficulty"
+                      style={{ backgroundColor: getQuestDifficultyColor(quest.difficulty) }}
+                    >
+                      {quest.difficulty}
+                    </span> */}
                   </div>
-                  <button
-                    className="complete-button"
-                    onClick={() => handleCompleteQuest(quest._id)}
-                    disabled={completingQuestId === quest._id}
-                  >
-                    {completingQuestId === quest._id ? 'Complétion...' : 'Terminer'}
-                  </button>
+                  <p className="quest-description">{quest.description || 'Pas de description'}</p>
+                  <div className="quest-footer">
+                    <div className="quest-rewards">
+                      <span className="reward-label">Récompenses:</span>
+                      <span className="reward-value">
+                        {quest.rewards?.experience || quest.experienceReward || '?'} XP
+                      </span>
+                      {quest.rewards?.item && (
+                        <span className="reward-value">1 objet</span>
+                      )}
+                    </div>
+                    <button
+                      className="complete-button"
+                      onClick={() => handleCompleteQuest(quest._id)}
+                      disabled={completingQuestId === quest._id}
+                    >
+                      {completingQuestId === quest._id ? 'Complétion...' : 'Terminer'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -168,9 +179,9 @@ function QuestJournal() {
                 <div className="quest-footer">
                   <div className="quest-rewards">
                     <span className="reward-label">Récompenses:</span>
-                    <span className="reward-value">{quest.experienceReward} XP</span>
-                    {quest.itemRewards?.length > 0 && (
-                      <span className="reward-value">{quest.itemRewards.length} objet(s)</span>
+                    <span className="reward-value">{quest.rewards?.experience || quest.experienceReward || '?'} XP</span>
+                    {quest.rewards?.item && (
+                      <span className="reward-value">1 objet</span>
                     )}
                   </div>
                   <button
