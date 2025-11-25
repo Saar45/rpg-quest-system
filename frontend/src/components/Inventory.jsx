@@ -15,7 +15,6 @@ function Inventory() {
       setLoading(true);
       setError(null);
 
-      // Utiliser les données du contexte utilisateur
       const inventoryIds = user?.inventory || [];
 
       // Si l'inventaire est vide
@@ -26,11 +25,9 @@ function Inventory() {
       }
 
       // Récupérer les détails de chaque item
-      // Si les items sont déjà populés (objets complets), les utiliser directement
       if (inventoryIds.length > 0 && typeof inventoryIds[0] === 'object' && inventoryIds[0]._id) {
         setInventory(inventoryIds);
       } else {
-        // Sinon, récupérer les détails de chaque item par son ID
         const itemPromises = inventoryIds.map(itemId => 
           itemsAPI.getById(token, itemId).catch(err => {
             console.error(`Error fetching item ${itemId}:`, err);
@@ -77,6 +74,7 @@ function Inventory() {
     }
   };
 
+  // Maybe add a color coding for item types and rarities in db later ? idk
   const getItemTypeColor = (type) => {
     const colors = {
       weapon: '#e53935',
