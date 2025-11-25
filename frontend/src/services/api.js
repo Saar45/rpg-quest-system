@@ -63,6 +63,14 @@ export const playerAPI = {
     return handleResponse(response);
   },
 
+  completeQuest: async (token, questId) => {
+    const response = await fetch(`${API_BASE_URL}/player/complete-quest/${questId}`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+    });
+    return handleResponse(response);
+  },
+
   useItem: async (token, itemId) => {
     const response = await fetch(`${API_BASE_URL}/player/use-item/${itemId}`, {
       method: 'POST',

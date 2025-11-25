@@ -428,6 +428,100 @@ app.post('/api/player/use-item/:itemId', authMiddleware, async (req, res) => {
   }
 });
 
+// Complete a quest
+app.post('/api/player/complete-quest/:questId', authMiddleware, async (req, res) => {
+  try {
+    const { questId } = req.params;
+
+    // Récupérer le joueur
+    const player = await Player.findById(req.player.id);
+    if (!player) {
+      return res.status(404).json({
+        success: false,
+        message: 'Player not found'
+      });
+    }
+
+    // Vérifier si la quête existe
+    const quest = await Quest.findById(questId);
+    if (!quest) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quest not found'
+      });
+    }
+
+    // Trouver la quête dans la liste des quêtes du joueur
+    const playerQuestIndex = player.quests.findIndex(
+      q => q.questId.toString() === questId
+    );
+
+    if (playerQuestIndex === -1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Quest not accepted by player'
+      });
+    }
+
+    const playerQuest = player.quests[playerQuestIndex];
+
+    // Vérifier que la quête est bien en cours
+    if (playerQuest.status !== 'in_progress') {
+      return res.status(400).json({
+        success: false,
+        message: `Quest is already ${playerQuest.status}`,
+        currentStatus: playerQuest.status
+      });
+    }
+
+    // Mettre à jour le statut de la quête
+    player.quests[playerQuestIndex].status = 'completed';
+
+    // Ajouter l'expérience
+    player.experience += quest.experienceReward;
+
+    // Calculer le niveau en fonction de l'expérience (100 XP par niveau)
+    const newLevel = Math.floor(player.experience / 100) + 1;
+    const leveledUp = newLevel > player.level;
+    player.level = newLevel;
+
+    // Ajouter les récompenses d'objets à l'inventaire
+    if (quest.itemRewards && quest.itemRewards.length > 0) {
+      player.inventory.push(...quest.itemRewards);
+    }
+
+    await player.save();
+
+    // Repopuler les données pour la réponse
+    await player.populate('inventory');
+    await player.populate('quests.questId');
+
+    res.json({
+      success: true,
+      message: 'Quest completed successfully',
+      data: {
+        quest: player.quests[playerQuestIndex],
+        rewards: {
+          experience: quest.experienceReward,
+          items: quest.itemRewards || []
+        },
+        player: {
+          level: player.level,
+          experience: player.experience,
+          leveledUp: leveledUp,
+          inventory: player.inventory
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error completing quest',
+      error: error.message
+    });
+  }
+});
+
 /* Health check route
 app.get('/health', (req, res) => {
   res.json({ 
