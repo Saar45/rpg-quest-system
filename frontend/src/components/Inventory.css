@@ -1,0 +1,242 @@
+.inventory {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.inventory-title {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.loading {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #666;
+  padding: 50px;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c62828;
+}
+
+.empty-inventory {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.empty-inventory p {
+  font-size: 1.2rem;
+  color: #555;
+  margin: 10px 0;
+}
+
+.empty-subtitle {
+  font-style: italic;
+  color: #888 !important;
+  font-size: 1rem !important;
+}
+
+.inventory-stats {
+  background-color: #f5f5f5;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-count {
+  font-size: 1rem;
+  color: #555;
+  font-weight: 600;
+  margin: 0;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.inventory-item {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  border-left: 4px solid #673ab7;
+}
+
+.inventory-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.item-name {
+  font-size: 1.2rem;
+  color: #333;
+  margin: 0;
+  font-weight: 600;
+  flex: 1;
+}
+
+.item-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.item-type-badge,
+.item-rarity-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.item-description {
+  color: #666;
+  line-height: 1.6;
+  margin: 0 0 15px 0;
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.item-effects {
+  background-color: #f9f9f9;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.effects-label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.effects-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.effect-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.85rem;
+}
+
+.effect-key {
+  color: #666;
+  text-transform: capitalize;
+}
+
+.effect-value {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  gap: 10px;
+}
+
+.item-value {
+  color: #f57c00;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.use-item-button {
+  padding: 8px 20px;
+  background-color: #673ab7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.use-item-button:hover:not(:disabled) {
+  background-color: #5e35b1;
+  transform: scale(1.05);
+}
+
+.use-item-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.use-item-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .inventory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-title {
+    font-size: 1.5rem;
+  }
+
+  .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .item-badges {
+    justify-content: flex-start;
+  }
+
+  .item-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .use-item-button {
+    width: 100%;
+  }
+}
