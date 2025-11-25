@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS middleware
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', '*'); // not a good practice for prod, I know
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
@@ -38,6 +38,10 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((error) => {
     console.error('MongoDB connection error:', error);
   });
+
+
+// To do later : put the routes in different files except the static ones
+
 
 // Basic route
 app.get('/', (req, res) => {
